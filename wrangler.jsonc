@@ -1,10 +1,15 @@
+
 {
+  "$schema": "node_modules/wrangler/config-schema.json",
   "name": "economat",
   "main": "server.js",
   "compatibility_date": "2026-10-12",
-  "compatibility_flags": [
-    "nodejs_compat"
-  ],
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application"
+  },
   "observability": {
     "enabled": true,
     "logs": {
@@ -21,10 +26,5 @@
     "issues": {
       "enabled": true
     }
-  },
-  "assets": {
-    "directory": "./dist",
-    "binding": "ASSETS",
-    "not_found_handling": "single-page-application"
   }
 }
