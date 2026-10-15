@@ -3,6 +3,9 @@
   "name": "economat",
   "main": "server.js",
   "compatibility_date": "2026-10-12",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
   "observability": {
     "enabled": true,
     "logs": {

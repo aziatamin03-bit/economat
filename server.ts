@@ -1,28 +1,17 @@
-import express from 'express';
-import path from 'path';
-import { fileURLToPath } from 'url';
+interface Env {
+  ASSETS: { fetch: (request: Request) => Promise<Response> };
+}
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    const url = new URL(request.url);
 
-const app = express();
-const port = Number(process.env.PORT) || 3000;
+    // Health check endpoint
+    if (url.pathname === '/health') {
+      return new Response('OK', { status: 200 });
+    }
 
-const distPath = path.join(__dirname, 'dist');
-
-// Serve static assets from Vite build output
-app.use(express.static(distPath));
-
-// Health check endpoint for Cloud Run
-app.get('/health', (_req, res) => {
-  res.status(200).send('OK');
-});
-
-// Fallback to index.html for Single Page Application
-app.get('*', (_req, res) => {
-  res.sendFile(path.join(distPath, 'index.html'));
-});
-
-app.listen(port, '0.0.0.0', () => {
-  console.log(`Server is running on port ${port} (0.0.0.0:${port})`);
-});
+    // Static files and SPA fallback handled by the ASSETS binding
+    return env.ASSETS.fetch(request);
+  },
+};
