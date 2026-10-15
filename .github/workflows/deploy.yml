@@ -30,6 +30,21 @@ jobs:
       - name: Build project
         run: npm run build
 
+      - name: Diagnose Wrangler configuration
+        run: |
+          echo "=== Current directory ==="
+          pwd
+          echo "=== Wrangler config files ==="
+          find . -maxdepth 3 \( -name "wrangler.jsonc" -o -name "wrangler.json" -o -name "wrangler.toml" \) -not -path "./node_modules/*" -print
+          echo "=== Generated Wrangler redirect ==="
+          if [ -f .wrangler/deploy/config.json ]; then
+            cat .wrangler/deploy/config.json
+          else
+            echo "No generated Wrangler redirect found"
+          fi
+          echo "=== Validate Wrangler configuration ==="
+          npx wrangler deploy --dry-run
+
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v4
         with:
