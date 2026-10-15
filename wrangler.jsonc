@@ -1,4 +1,3 @@
-cat > wrangler.jsonc << 'EOF'
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "economat",
@@ -27,4 +26,3 @@ cat > wrangler.jsonc << 'EOF'
     "not_found_handling": "single-page-application"
   }
 }
-EOF
