@@ -140,11 +140,13 @@
         if (index === -1) throw new Error('سجل الجرد غير موجود');
 
         const current = stocktakes[index];
+        if (current.status !== 'draft') throw new Error('لا يمكن تعديل أو اعتماد جرد معتمد');
         if (body.notes !== undefined) current.notes = body.notes;
         if (Array.isArray(body.items)) {
           body.items.forEach(inputItem => {
             const existing = current.items.find(i => i.materialId === inputItem.materialId);
             if (existing) {
+              if (inputItem.actualQuantity != null && (!Number.isFinite(Number(inputItem.actualQuantity)) || Number(inputItem.actualQuantity) < 0)) throw new Error('الكمية الفعلية غير صالحة');
               existing.actualQuantity = inputItem.actualQuantity;
               existing.reason = inputItem.reason || '';
               existing.notes = inputItem.notes || '';
@@ -152,6 +154,9 @@
                 const diff = Number(inputItem.actualQuantity) - Number(existing.theoreticalQuantity);
                 existing.variance = Number(diff.toFixed(4));
                 existing.varianceValue = Number((diff * Number(existing.unitCost)).toFixed(2));
+              } else {
+                existing.variance = null;
+                existing.varianceValue = null;
               }
             }
           });
@@ -171,6 +176,8 @@
         if (index === -1) throw new Error('سجل الجرد غير موجود');
 
         const current = stocktakes[index];
+        if (current.status !== 'draft') throw new Error('لا يمكن تعديل أو اعتماد جرد معتمد');
+        if (!current.items.length || current.items.some(item => item.actualQuantity == null || !Number.isFinite(Number(item.actualQuantity)) || Number(item.actualQuantity) < 0)) throw new Error('أكمل الكميات الفعلية قبل اعتماد الجرد');
         current.status = 'approved';
         current.approvedBy = { name: 'المشرف المعتمد' };
         current.approvedAt = new Date().toISOString();
@@ -178,6 +185,7 @@
         // Apply adjustments to restaurant state
         const stateRaw = localStorage.getItem(getStorageKey('restaurant'));
         const state = stateRaw ? JSON.parse(stateRaw) : { materials: [], movements: [], stocktakes: [] };
+        state.movements = state.movements || [];
 
         current.items.forEach(item => {
           if (item.actualQuantity !== null && item.actualQuantity !== undefined) {
@@ -229,7 +237,11 @@
 
       // Admin import
       if (pathname === '/api/admin/state/restaurant/import') {
-        if (!body || !body.state) throw new Error('بيانات غير صالحة');
+        if (!body || !body.state || !Array.isArray(body.state.materials)) throw new Error('بيانات غير صالحة');
+        for (const key of ['invoices', 'purchaseOrders', 'movements', 'stocktakes', 'suppliers', 'technicalSheets', 'dishSales', 'monthlyArchives']) {
+          if (body.state[key] !== undefined && !Array.isArray(body.state[key])) throw new Error('بيانات غير صالحة');
+        }
+        if (body.generalStocktakes !== undefined && !Array.isArray(body.generalStocktakes)) throw new Error('بيانات غير صالحة');
         localStorage.setItem(getStorageKey('restaurant'), JSON.stringify(body.state));
         if (body.generalStocktakes) {
           localStorage.setItem(getStocktakesKey('restaurant'), JSON.stringify(body.generalStocktakes));

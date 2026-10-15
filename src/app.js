@@ -7,6 +7,9 @@
 	let pendingSaveTimer = null;
 	const viewContent = document.getElementById('viewContent');
 	let currentLanguage = localStorage.getItem('appLanguage') || 'ar';
+	if (!['ar', 'en', 'fr'].includes(currentLanguage)) currentLanguage = 'ar';
+	document.documentElement.lang = currentLanguage;
+	document.documentElement.dir = currentLanguage === 'ar' ? 'rtl' : 'ltr';
 	let selectedGeneralStocktakeId = null;
 
 	const translations = {
@@ -200,7 +203,7 @@
 	function loadState() {
 		try {
 			const saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
-			if (!Array.isArray(saved.materials) || saved.materials.length === 0) {
+			if (!Array.isArray(saved?.materials)) {
 				const demo = getDemoData();
 				localStorage.setItem(storageKey, JSON.stringify(demo));
 				return demo;
@@ -1219,7 +1222,7 @@
 		const dlg = document.getElementById('invoiceDetailDialog');
 		if (!dlg) return;
 
-		const totals = getInvoiceTotals(inv.lines, inv.vatRate || 20);
+		const totals = getInvoiceTotals(inv.lines, inv.vatRate ?? 20);
 		const linesHtml = (inv.lines || []).map((l, idx) => {
 			const mat = state.materials.find(m => m.id === l.materialId);
 			const st = (Number(l.quantity) || 0) * (Number(l.unitCost) || 0);
@@ -1270,7 +1273,7 @@
 	}
 
 	function printInvoicePdf(inv) {
-		const totals = getInvoiceTotals(inv.lines, inv.vatRate || 20);
+		const totals = getInvoiceTotals(inv.lines, inv.vatRate ?? 20);
 		const linesHtml = (inv.lines || []).map((l, idx) => {
 			const mat = state.materials.find(m => m.id === l.materialId);
 			const st = (Number(l.quantity) || 0) * (Number(l.unitCost) || 0);
@@ -1338,7 +1341,7 @@
 		const matching = state.invoices.filter(inv => `${inv.number} ${inv.supplier} ${inv.date}`.toLowerCase().includes(term));
 
 		const rows = matching.map(inv => {
-			const totals = getInvoiceTotals(inv.lines, inv.vatRate || 20);
+			const totals = getInvoiceTotals(inv.lines, inv.vatRate ?? 20);
 			return `
 				<tr>
 					<td><span class="item-main">${esc(inv.number || 'فاتورة')}</span><div class="item-sub">${esc(inv.date)}</div></td>
@@ -1959,7 +1962,7 @@
 				materialId: l.querySelector('[data-line-material]')?.value,
 				quantity: Number(l.querySelector('[data-line-quantity]')?.value) || 0,
 				unitCost: Number(l.querySelector('[data-line-cost]')?.value) || 0,
-				vatRate: Number(l.querySelector('[data-line-vat]')?.value) || 20
+				vatRate: Number(l.querySelector('[data-line-vat]')?.value ?? 20)
 			})).filter(l => l.materialId && l.quantity > 0);
 
 			if (!lines.length) { toast('أضف سطراً واحداً على الأقل للفاتورة'); return; }
@@ -2168,6 +2171,7 @@
 
 	// Global Click Handlers
 	document.addEventListener('click', async event => {
+		try {
 		const target = event.target;
 
 		if (target.closest('[data-close]')) {
@@ -2826,11 +2830,13 @@
 			return;
 		}
 		if (target.closest('#backupBtn')) {
-			const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+			const backup = await window.ObayoliCloud.request('/api/admin/state/restaurant/export');
+			const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
 			const a = document.createElement('a');
 			a.href = URL.createObjectURL(blob);
 			a.download = `obayoli_backup_${today()}.json`;
 			a.click();
+			setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 			toast('تم تنزيل النسخة الاحتياطية بنجاح');
 			return;
 		}
@@ -2851,10 +2857,16 @@
 		}
 		if (target.closest('#clearDataBtn')) {
 			if (confirm('هل أنت متأكد من رغبتك في تفريغ وحذف جميع البيانات؟')) {
-				localStorage.removeItem(storageKey);
+				clearTimeout(pendingSaveTimer);
+				const empty = Object.fromEntries(Object.entries(state).map(([key, value]) => [key, Array.isArray(value) ? [] : value]));
+				await window.ObayoliCloud.request('/api/admin/state/restaurant/import', { method: 'POST', body: JSON.stringify({ state: empty, generalStocktakes: [] }) });
 				location.reload();
 			}
 			return;
+		}
+		} catch (error) {
+			console.error('Action failed:', error);
+			toast(error.message || 'تعذر إتمام العملية');
 		}
 	});
 
@@ -2993,15 +3005,17 @@
 			const file = event.target.files?.[0];
 			if (file) {
 				const reader = new FileReader();
-				reader.onload = e => {
+				reader.onload = async e => {
 					try {
 						const parsed = JSON.parse(e.target.result);
-						if (parsed.materials) {
-							Object.assign(state, parsed);
-							saveState();
-							toast('تمت استعادة البيانات بنجاح!');
-							setTimeout(() => location.reload(), 1000);
-						}
+						const restored = parsed.state || parsed;
+						if (!Array.isArray(restored.materials)) throw new Error('Invalid backup');
+						clearTimeout(pendingSaveTimer);
+						await window.ObayoliCloud.request('/api/admin/state/restaurant/import', {
+							method: 'POST', body: JSON.stringify({ state: restored, generalStocktakes: parsed.generalStocktakes || [] })
+						});
+						toast('تمت استعادة البيانات بنجاح!');
+						setTimeout(() => location.reload(), 1000);
 					} catch (err) { toast('ملف النسخة الاحتياطية غير صالح'); }
 				};
 				reader.readAsText(file);
