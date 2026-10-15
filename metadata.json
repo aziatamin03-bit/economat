@@ -1,0 +1,10 @@
+{
+  "name": "OBAYOLI | تسيير المطاعم والمخزون",
+  "description": "نظام شامل ومتكامل لإدارة وتسيير المطاعم، المخزون، الفواتير، Fiche technique، مبيعات الأطباق، الجرد العام، والتواصل عبر WhatsApp",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
