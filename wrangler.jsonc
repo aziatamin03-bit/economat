@@ -6,6 +6,7 @@
   "previews": {},
   "compatibility_date": "2026-10-12",
   "compatibility_flags": ["nodejs_compat"],
+  "build": { "command": "npm run build" },
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
