@@ -1843,7 +1843,7 @@
 	document.addEventListener('submit', event => {
 		const form = event.target;
 
-		if (form.id === 'whatsappQuickForm') {
+		if (form.getAttribute('id') === 'whatsappQuickForm') {
 			event.preventDefault();
 			const data = new FormData(form);
 			const phone = String(data.get('phone')).replace(/\D/g, '');
@@ -1860,7 +1860,7 @@
 			return;
 		}
 
-		if (form.id === 'materialForm') {
+		if (form.getAttribute('id') === 'materialForm') {
 			event.preventDefault();
 			const data = new FormData(form);
 			const editId = data.get('id');
@@ -1922,7 +1922,7 @@
 			return;
 		}
 
-		if (form.id === 'wasteForm') {
+		if (form.getAttribute('id') === 'wasteForm') {
 			event.preventDefault();
 			const data = new FormData(form);
 			const mat = state.materials.find(m => m.id === data.get('materialId'));
@@ -1938,7 +1938,7 @@
 			return;
 		}
 
-		if (form.id === 'consumptionForm') {
+		if (form.getAttribute('id') === 'consumptionForm') {
 			event.preventDefault();
 			const data = new FormData(form);
 			const mat = state.materials.find(m => m.id === data.get('materialId'));
@@ -1955,7 +1955,7 @@
 			return;
 		}
 
-		if (form.id === 'invoiceForm') {
+		if (form.getAttribute('id') === 'invoiceForm') {
 			event.preventDefault();
 			const data = new FormData(form);
 			const lines = [...document.querySelectorAll('#invoiceLines .invoice-line')].map(l => ({
@@ -2000,7 +2000,7 @@
 			return;
 		}
 
-		if (form.id === 'technicalSheetForm') {
+		if (form.getAttribute('id') === 'technicalSheetForm') {
 			event.preventDefault();
 			const data = new FormData(form);
 			const lines = [...document.querySelectorAll('#technicalLines .invoice-line')].map(l => {
@@ -2040,7 +2040,7 @@
 			return;
 		}
 
-		if (form.id === 'dishSaleForm') {
+		if (form.getAttribute('id') === 'dishSaleForm') {
 			event.preventDefault();
 			const data = new FormData(form);
 			const sheet = state.technicalSheets.find(s => s.id === data.get('technicalSheetId'));
@@ -2076,7 +2076,7 @@
 			return;
 		}
 
-		if (form.id === 'supplierForm') {
+		if (form.getAttribute('id') === 'supplierForm') {
 			event.preventDefault();
 			const data = new FormData(form);
 			const sup = {
@@ -2100,7 +2100,7 @@
 			return;
 		}
 
-		if (form.id === 'movementForm') {
+		if (form.getAttribute('id') === 'movementForm') {
 			event.preventDefault();
 			const data = new FormData(form);
 			const mat = state.materials.find(m => m.id === data.get('materialId'));
@@ -2118,7 +2118,7 @@
 			return;
 		}
 
-		if (form.id === 'purchaseOrderForm') {
+		if (form.getAttribute('id') === 'purchaseOrderForm') {
 			event.preventDefault();
 			const data = new FormData(form);
 			const orderId = String(data.get('id') || '');
