@@ -3,6 +3,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "economat",
   "main": "server.js",
+  "previews": {},
   "compatibility_date": "2026-10-12",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
