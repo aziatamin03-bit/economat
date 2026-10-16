@@ -146,3 +146,4 @@ git push -u origin main
 ## 📜 الترخيص (License)
 هذا المشروع مرخص بموجب رخصة [MIT License](LICENSE).
 # economat
+# economat
